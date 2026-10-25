@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+uploads/
+*.pyc
+.env
+data_balita.csv

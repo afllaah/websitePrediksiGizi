@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiziBalita — Klasifikasi Status Gizi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="#"><span class="brand-mark">G<span>+</span></span><span>Gizi<span class="brand-light">Balita</span><small>ML HEALTH DASHBOARD</small></span></a>
+    <div class="nav-label">MENU UTAMA</div>
+    <button class="nav-link active" data-target="dashboard"><span>▦</span> Dashboard</button>
+    <button class="nav-link" data-target="predict"><span>＋</span> Prediksi Status Gizi</button>
+    <button class="nav-link" data-target="dataset"><span>▤</span> Dataset</button>
+    <button class="nav-link" data-target="evaluation"><span>⌁</span> Evaluasi Model</button>
+    <button class="nav-link" data-target="history"><span>◷</span> Riwayat Prediksi</button>
+    <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Model KNN</b><small id="sidebarStatus">Belum dilatih</small></div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><div class="eyebrow">MACHINE LEARNING / KESEHATAN</div><h1 id="pageTitle">Dashboard</h1></div><div class="top-right"><span class="live-pill"><i></i><span id="topStatus">Menunggu dataset</span></span><div class="avatar">GB</div></div></header>
+    <div id="globalAlert" class="alert hidden"></div>
+    <section id="dashboard" class="page-section">
+      <div class="welcome"><div><p class="eyebrow light">SELAMAT DATANG DI GIZIBALITA</p><h2>Kenali data, pahami<br><span>status gizi balita.</span></h2><p class="welcome-copy">Dashboard klasifikasi berbasis algoritma K-Nearest Neighbors (KNN).</p><button class="btn btn-white" data-go="predict">Mulai prediksi <span>↗</span></button></div><div class="welcome-art"><div class="circle circle-one"></div><div class="circle circle-two"></div><div class="art-card"><div class="art-icon">♡</div><b>Data-driven insight</b><small>Prediksi dari model terlatih</small><div class="art-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div></div>
+      <div class="section-heading"><div><h3>Ringkasan dataset</h3><p>Statistik dari CSV yang sedang digunakan</p></div><button class="btn btn-outline" data-go="dataset">Kelola dataset <span>→</span></button></div>
+      <div class="stats-grid">
+        <article class="stat-card"><div class="stat-top"><span>Total baris data</span><span class="stat-icon blue">▤</span></div><strong id="statRows">—</strong><small>Data yang dimuat</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Kategori status gizi</span><span class="stat-icon teal">◈</span></div><strong id="statClasses">—</strong><small>Kelas target ditemukan</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Akurasi testing</span><span class="stat-icon purple">⌁</span></div><strong id="statAccuracy">—</strong><small>Evaluasi hold-out</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Nilai K terpilih</span><span class="stat-icon orange">◎</span></div><strong id="statK">—</strong><small>Jumlah tetangga model</small></article>
+      </div>
+      <div class="two-col">
+        <article class="panel"><div class="panel-heading"><div><h3>Distribusi status gizi</h3><p>Jumlah label pada dataset</p></div><span class="panel-tag">DATASET</span></div><div class="chart-wrap"><canvas id="distributionChart"></canvas><div id="emptyDistribution" class="chart-empty">Unggah CSV untuk melihat grafik.</div></div></article>
+        <article class="panel"><div class="panel-heading"><div><h3>Kesiapan sistem</h3><p>Status model dan kualitas data</p></div><span class="panel-tag">STATUS</span></div><div class="check-list"><div><span class="check-bullet">✓</span><div><b>Struktur aplikasi</b><small>Frontend dan backend Flask aktif</small></div><span class="mini-state good">Aktif</span></div><div><span class="check-bullet" id="modelBullet">·</span><div><b>Model KNN</b><small id="modelReadyText">Menunggu dataset valid</small></div><span class="mini-state" id="modelState">Belum siap</span></div><div><span class="check-bullet">i</span><div><b>Catatan penggunaan</b><small>Hasil model bukan diagnosis medis</small></div></div></div><div class="notice"><b>Perlu diketahui</b><p>Akurasi dipengaruhi kualitas dan representasi dataset. Periksa hasil dengan tenaga kesehatan; jangan gunakan sebagai satu-satunya dasar keputusan.</p></div></article>
+      </div>
+    </section>
+    <section id="predict" class="page-section hidden">
+      <div class="section-heading"><div><h3>Prediksi status gizi</h3><p>Masukkan data untuk mendapatkan prediksi dari model KNN yang sudah dilatih.</p></div><span class="panel-tag">KNN CLASSIFIER</span></div>
+      <div class="two-col predict-layout">
+        <article class="panel form-panel"><div class="panel-heading"><div><h3>Data balita</h3><p>Semua input wajib diisi</p></div><span class="form-symbol">＋</span></div>
+          <form id="predictForm"><label>Umur balita <span>(bulan)</span><input id="age" type="number" min="0" max="60" step="1" placeholder="Contoh: 24" required></label><label>Jenis kelamin<select id="gender" required><option value="0">Laki-laki</option><option value="1">Perempuan</option></select></label><label>Tinggi badan <span>(cm)</span><input id="height" type="number" min="1" max="150" step="0.1" placeholder="Contoh: 85" required></label><button id="predictBtn" class="btn btn-primary full" type="submit" disabled>Prediksi status gizi <span>→</span></button><p class="form-foot">Pastikan pengukuran akurat. Input dibatasi untuk kebutuhan aplikasi demo.</p></form>
+        </article>
+        <article class="panel result-panel"><div class="panel-heading"><div><h3>Hasil prediksi</h3><p>Hasil dari model yang aktif</p></div><span class="result-status">LIVE MODEL</span></div><div id="resultPlaceholder" class="result-placeholder"><div class="result-illustration">⌁</div><b>Hasil akan muncul di sini</b><p>Lengkapi form dan tekan tombol prediksi setelah model siap.</p></div><div id="resultContent" class="hidden"><div class="result-label">PREDIKSI STATUS GIZI</div><div id="predictionValue" class="prediction-value"></div><div class="result-note">Prediksi algoritma berdasarkan pola pada dataset pelatihan.</div><div class="notice warning"><b>Bukan diagnosis medis</b><p>Hasil ini tidak menggantikan pemeriksaan pertumbuhan dan penilaian tenaga kesehatan.</p></div></div></article>
+      </div>
+    </section>
+    <section id="dataset" class="page-section hidden">
+      <div class="section-heading"><div><h3>Dataset balita</h3><p>Unggah CSV untuk melatih model dan menampilkan data.</p></div><span class="panel-tag">CSV DATA</span></div>
+      <article class="panel upload-panel"><div class="upload-icon">↑</div><div class="upload-copy"><h3>Unggah dataset CSV</h3><p>Kolom wajib: Umur (bulan), Jenis Kelamin, Tinggi Badan (cm), Status Gizi.</p><small>Format .csv · maksimal 15 MB. Upload dataset akan melatih ulang model.</small></div><form id="uploadForm" class="upload-form"><input type="file" id="csvFile" accept=".csv,text/csv" required><button class="btn btn-primary" type="submit">Unggah & latih model</button></form></article>
+      <div id="datasetInfo" class="dataset-info">Belum ada dataset yang dimuat.</div>
+      <article class="panel table-panel"><div class="panel-heading"><div><h3>Pratinjau data</h3><p id="tableSub">Maksimal 500 baris ditampilkan</p></div><input id="tableSearch" class="search-input" placeholder="Cari data..." aria-label="Cari data"></div><div class="table-scroll"><table><thead><tr><th>Umur (bulan)</th><th>Jenis kelamin</th><th>Tinggi badan (cm)</th><th>Status gizi</th></tr></thead><tbody id="datasetBody"><tr><td colspan="4" class="empty-cell">Unggah dataset CSV untuk melihat data.</td></tr></tbody></table></div></article>
+    </section>
+    <section id="evaluation" class="page-section hidden">
+      <div class="section-heading"><div><h3>Evaluasi model</h3><p>Hasil evaluasi berdasarkan pemisahan data training dan testing.</p></div><span class="panel-tag">MODEL METRICS</span></div>
+      <div class="stats-grid three"><article class="stat-card"><div class="stat-top"><span>Akurasi training</span><span class="stat-icon blue">↗</span></div><strong id="trainAcc">—</strong><small>Data untuk pelatihan</small></article><article class="stat-card"><div class="stat-top"><span>Akurasi testing</span><span class="stat-icon teal">◎</span></div><strong id="testAcc">—</strong><small>Data uji terpisah</small></article><article class="stat-card"><div class="stat-top"><span>Data testing</span><span class="stat-icon purple">▤</span></div><strong id="testCount">—</strong><small>Jumlah baris uji</small></article></div>
+      <div class="two-col"><article class="panel"><div class="panel-heading"><div><h3>Confusion matrix</h3><p>Baris = label sebenarnya, kolom = prediksi</p></div></div><div id="confusionWrap" class="confusion-wrap"><p class="muted">Unggah dataset untuk menghitung confusion matrix.</p></div></article><article class="panel"><div class="panel-heading"><div><h3>Classification report</h3><p>Precision, recall, F1-score per kelas</p></div></div><div class="table-scroll"><table><thead><tr><th>Kelas</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead><tbody id="reportBody"><tr><td colspan="5" class="empty-cell">Belum ada hasil evaluasi.</td></tr></tbody></table></div></article></div>
+      <div class="notice"><b>Cara membaca akurasi</b><p>Akurasi testing adalah proporsi prediksi yang tepat pada bagian data uji. Nilai ini bukan jaminan bahwa prediksi pada pengguna baru akan selalu benar, terutama jika dataset kecil atau tidak mewakili populasi.</p></div>
+    </section>
+    <section id="history" class="page-section hidden">
+      <div class="section-heading"><div><h3>Riwayat prediksi</h3><p>Prediksi yang dibuat selama sesi aplikasi ini berjalan.</p></div><a class="btn btn-outline" href="/api/history.csv">Unduh CSV <span>↓</span></a></div>
+      <article class="panel table-panel"><div class="panel-heading"><div><h3>Aktivitas prediksi</h3><p>Riwayat tersimpan sementara di memori server.</p></div><button class="btn btn-outline" id="refreshHistory">Perbarui ↻</button></div><div class="table-scroll"><table><thead><tr><th>Waktu</th><th>Umur</th><th>Jenis kelamin</th><th>Tinggi</th><th>Prediksi</th></tr></thead><tbody id="historyBody"><tr><td colspan="5" class="empty-cell">Belum ada prediksi.</td></tr></tbody></table></div></article>
+      <div class="notice"><b>Catatan penyimpanan</b><p>Versi awal ini menyimpan riwayat di memori proses; riwayat dapat hilang saat server restart. Untuk produksi, gunakan database dengan pengaturan privasi dan keamanan yang sesuai.</p></div>
+    </section>
+    <footer>GiziBalita <span>•</span> Proyek pembelajaran Machine Learning <span class="footer-right">Hasil bukan diagnosis medis</span></footer>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body></html>
